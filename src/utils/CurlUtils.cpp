@@ -204,6 +204,10 @@ UTILS::CURL::CUrl::CUrl(const std::string& url, const RequestType reqType /* = R
     if (!kodiProps.GetConfig().curlSSLVerifyPeer)
       m_file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "verifypeer", "false");
 
+    if (!kodiProps.GetLocalAddress().empty())
+      m_file.CURLAddOption(ADDON_CURL_OPTION_PROTOCOL, "local-address",
+                           kodiProps.GetLocalAddress().c_str());
+
     AddHeaders(kodiProps.GetCommonHeaders());
 
     // Add session cookies

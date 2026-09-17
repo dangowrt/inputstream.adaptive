@@ -180,6 +180,8 @@ public:
   // \brief HTTP headers used to download streams
   std::map<std::string, std::string> GetStreamHeaders() const { return m_streamHeaders; }
 
+  std::string GetLocalAddress() const { return m_localAddress; }
+
   // \brief Specify to start playing a LIVE stream from the beginning of the buffer instead of its end
   bool IsPlayTimeshift() const { return m_playTimeshiftBuffer; }
 
@@ -215,6 +217,7 @@ private:
   std::map<std::string, std::string> m_manifestHeaders;
   std::string m_streamParams;
   std::map<std::string, std::string> m_streamHeaders;
+  std::string m_localAddress;
   bool m_playTimeshiftBuffer{false};
   ChooserProps m_chooserProps;
   Config m_config;
