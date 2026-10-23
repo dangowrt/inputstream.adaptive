@@ -317,7 +317,6 @@ private:
   std::string base_path_;
   std::string m_filepath;
   cdm::FileIOClient* client_;
-  FILE *file_descriptor_;
   uint8_t *data_buffer_;
   bool opened_;
 };
