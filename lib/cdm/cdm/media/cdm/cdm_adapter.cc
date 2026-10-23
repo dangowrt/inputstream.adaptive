@@ -917,7 +917,6 @@ void CdmAdapter::OnInitialized(bool success)
 CdmFileIoImpl::CdmFileIoImpl(std::string base_path, cdm::FileIOClient* client)
   : base_path_(base_path)
   , client_(client)
-  , file_descriptor_(0)
   , data_buffer_(0)
   , opened_(false)
 {
@@ -944,19 +943,20 @@ void CdmFileIoImpl::Read()
   free(reinterpret_cast<void*>(data_buffer_));
   data_buffer_ = nullptr;
 
-  file_descriptor_ = fopen(m_filepath.c_str(), "rb");
+  FILE* file = fopen(m_filepath.c_str(), "rb");
 
-  if (file_descriptor_)
+  if (file)
   {
     status = cdm::FileIOClient::Status::kSuccess;
-    fseek(file_descriptor_, 0, SEEK_END);
-    sz = ftell(file_descriptor_);
+    fseek(file, 0, SEEK_END);
+    sz = ftell(file);
     if (sz)
     {
-      fseek(file_descriptor_, 0, SEEK_SET);
-      if ((data_buffer_ = reinterpret_cast<uint8_t*>(malloc(sz))) == nullptr || fread(data_buffer_, 1, sz, file_descriptor_) != sz)
+      fseek(file, 0, SEEK_SET);
+      if ((data_buffer_ = reinterpret_cast<uint8_t*>(malloc(sz))) == nullptr || fread(data_buffer_, 1, sz, file) != sz)
       status = cdm::FileIOClient::Status::kError;
     }
+    fclose(file);
   } else
     status = cdm::FileIOClient::Status::kSuccess;
   client_->OnReadComplete(status, data_buffer_, static_cast<uint32_t>(sz));
@@ -973,14 +973,13 @@ void CdmFileIoImpl::Write(const uint8_t* data, uint32_t data_size)
 
   cdm::FileIOClient::Status status = cdm::FileIOClient::Status::kError;
 
-  file_descriptor_ = fopen(m_filepath.c_str(), "wb");
+  FILE* file = fopen(m_filepath.c_str(), "wb");
 
-  if (file_descriptor_)
+  if (file)
   {
-    if (fwrite(data, 1, data_size, file_descriptor_) == data_size)
-    {
+    const bool written = fwrite(data, 1, data_size, file) == data_size;
+    if (fclose(file) == 0 && written)
       status = cdm::FileIOClient::Status::kSuccess;
-    }
   }
 
   client_->OnWriteComplete(status);
@@ -988,11 +987,6 @@ void CdmFileIoImpl::Write(const uint8_t* data, uint32_t data_size)
 
 void CdmFileIoImpl::Close()
 {
-  if (file_descriptor_)
-  {
-    fclose(file_descriptor_);
-    file_descriptor_ = 0;
-  }
   client_ = 0;
   free(reinterpret_cast<void*>(data_buffer_));
   data_buffer_ = 0;
